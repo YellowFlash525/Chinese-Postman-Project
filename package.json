@@ -1,0 +1,30 @@
+{
+  "name": "chinese-postman-project",
+  "version": "1.0.0",
+  "description": "Implementation of Chinese Postman Problem - University Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YellowFlash525/Chinese-Postman-Project.git"
+  },
+  "keywords": [
+    "CPP",
+    "NODE"
+  ],
+  "author": "Kamil Wójcik",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YellowFlash525/Chinese-Postman-Project/issues"
+  },
+  "homepage": "https://github.com/YellowFlash525/Chinese-Postman-Project#readme",
+  "devDependencies": {
+    "lodash": "^4.17.5",
+    "sigma": "^1.2.1"
+  },
+  "dependencies": {
+    "js-graph-algorithms": "^1.0.18"
+  }
+}
