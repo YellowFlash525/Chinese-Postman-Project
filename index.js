@@ -1,34 +1,66 @@
-const jsgraphs = require('js-graph-algorithms');
 const _ = require('lodash');
 
-var g = new jsgraphs.WeightedGraph(8);
-var pairingsOfVertices = [];
+var dijkstra = require('./dijkstra').dijkstra;
+var distMatrix =
+  [[Infinity, 7,        9,        Infinity, Infinity, 16],
+  [7,        Infinity, 10,       15,       Infinity, Infinity],
+  [9,        10,       Infinity, 11,       Infinity, 2],
+  [Infinity, 15,       11,       Infinity, 6,        Infinity],
+  [Infinity, Infinity, Infinity, 6,        Infinity, 9],
+  [16,       Infinity, 2,        Infinity, 9,        Infinity]];
 
-var generateGraph = (graph) => {
-  graph.addEdge(new jsgraphs.Edge(0, 1, 5.0));
-  graph.addEdge(new jsgraphs.Edge(0, 4, 9.0));
-  graph.addEdge(new jsgraphs.Edge(0, 7, 8.0));
-  graph.addEdge(new jsgraphs.Edge(1, 2, 12.0));
-  graph.addEdge(new jsgraphs.Edge(1, 3, 15.0));
-  graph.addEdge(new jsgraphs.Edge(1, 7, 4.0));
-  graph.addEdge(new jsgraphs.Edge(2, 3, 3.0));
-  graph.addEdge(new jsgraphs.Edge(2, 6, 11.0));
-  graph.addEdge(new jsgraphs.Edge(3, 6, 9.0));
-  graph.addEdge(new jsgraphs.Edge(4, 5, 5.0));
-  graph.addEdge(new jsgraphs.Edge(4, 6, 20.0));
-  graph.addEdge(new jsgraphs.Edge(4, 7, 5.0));
-  graph.addEdge(new jsgraphs.Edge(5, 2, 1.0));
-  graph.addEdge(new jsgraphs.Edge(5, 6, 13.0));
-  graph.addEdge(new jsgraphs.Edge(7, 5, 6.0));
-  graph.addEdge(new jsgraphs.Edge(7, 2, 7.0));
-};
+var pairingsOfOddVertices = [];
 
-var checkGraphConsistent = (graph) => {
+var hasPath = (current, goal) => {
+  var stack = [], visitedNodes = [], node;
+  stack.push(current);
+  visitedNodes[current] = true;
+
+  while (stack.length) {
+    node = stack.pop();
+    if (node === goal) return true;
+
+    for (let i = 0; i < distMatrix[node].length; i++) {
+      if (distMatrix[node][i] && !visitedNodes[i]) {
+        stack.push(i);
+        visitedNodes[i] = true;
+      }
+    }
+  }
+  return false;
+}
+
+var checkGraphIsConsistent = () => {
+  var pairingsOfVertices = [];
+  var check = false;
+
+  for (let i = 0; i < distMatrix.length; i++) {
+    for (let j = i + 1; j < distMatrix.length; j++) {
+      pairingsOfVertices.push({'v1': i, 'v2': j});
+    }
+  }
+
+  _.each(pairingsOfVertices, (pair) => {
+    if (hasPath(pair.v1, pair.v2)) {
+      check = true;
+    } else {
+      return false;
+    }
+  });
+
+  return check;
+}
+
+var findOddVerticies = () => {
   var oddVertices = [];
   
-  for (let i = 0; i < graph.V; i++) {
-    if (graph.adj(i).length % 2 !== 0) {
-      // oddVertices.push(graph.adj(i)); // -> add object with vertices
+  for (let i = 0; i < distMatrix.length; i++) {
+    var numberOfEdges = 0;
+    for (let j = 0; j < distMatrix[i].length; j++) {
+      (distMatrix[i][j] !== Infinity) ? numberOfEdges++ : numberOfEdges;
+    }
+
+    if (numberOfEdges % 2 !== 0) {
       oddVertices.push(i);
     }
   }
@@ -36,48 +68,39 @@ var checkGraphConsistent = (graph) => {
   return oddVertices;
 };
 
-var setPairingsOfVertices = (graph) => {
-  const numbersOfOddVertices =  checkGraphConsistent(graph);
+var setPairingsOfVertices = () => {
+  const numbersOfOddVertices = findOddVerticies();
 
-  for (let i = 0; i < numbersOfOddVertices.length; ++i) {
-    for (let j = i + 1; j < numbersOfOddVertices.length; ++j) {
-      pairingsOfVertices.push({'v1': numbersOfOddVertices[i], 'v2': numbersOfOddVertices[j]});
+  for (let i = 0; i < numbersOfOddVertices.length; i++) {
+    for (let j = i + 1; j < numbersOfOddVertices.length; j++) {
+      pairingsOfOddVertices.push({'v1': numbersOfOddVertices[i], 'v2': numbersOfOddVertices[j], 'isCalculated': false});
     }
   }
 
-  return pairingsOfVertices;
-};
-
-var dijkstraAlgorithm = (graph) => {
-  console.log('In this place we will be find shorter path with Dijkstra ALgorithm!')
-  // _.each(pairs, (pair) => {
-  //   var dijkstra = new jsgraphs.Dijkstra(graph, pair.v1);
-  //     if(dijkstra.hasPathTo(pair.v2)){
-  //         var path = dijkstra.pathTo(pair.v2);
-  //         console.log('=====path from ' + pair.v1 + ' to ' + pair.v2 + ' start==========');
-  //         for(var i = 0; i < path.length; ++i) {
-  //             var e = path[i];
-  //             console.log(e.from() + ' => ' + e.to() + ': ' + e.weight);
-  //         }
-  //         console.log('=====path from ' + pair.v1 + ' to ' + pair.v2 + ' end==========');
-  //         console.log('=====distance: '  + dijkstra.distanceTo(pair.v2) + '=========');
-  //     }
-  // });
+  console.log(pairingsOfOddVertices);
+  return pairingsOfOddVertices;
 };
 
 var initChinesePostmanProblem = () => {
-  generateGraph(g);
 
-  if (setPairingsOfVertices(g).length === 0) {
-    console.log('Graph is not consistent!');
+  if (checkGraphIsConsistent()) {
+    console.log('Graph is consistent!');
+    if (setPairingsOfVertices().length !== 0) {
+      console.log('Graph have odd verticies! Half-Euler Graph');
+    } else {
+      console.log('Grpah havent odd verticies! Euler Graph');
+    }
   } else {
-    console.log('Grpah is consistent!');
+    console.log('Graph isnt consistent!');
   }
-
-  console.log(pairingsOfVertices);
-
-  dijkstraAlgorithm(g);
 }
 
+// var shortestDist = dijkstra(0, 5, distMatrix);
 
-initChinesePostmanProblem(g);
+// console.log(shortestDist);
+
+
+initChinesePostmanProblem();
+
+// dijkstra(column, row, graph)
+
