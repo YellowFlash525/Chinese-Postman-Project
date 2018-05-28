@@ -9,8 +9,6 @@ var distMatrix =
   [Infinity, Infinity, Infinity, 6,        Infinity, 9],
   [16,       Infinity, 2,        Infinity, 9,        Infinity]];
 
-var pairingsOfOddVertices = [];
-
 var hasPath = (current, goal) => {
   var stack = [], visitedNodes = [], node;
   stack.push(current);
@@ -70,6 +68,7 @@ var findOddVerticies = () => {
 
 var setPairingsOfVertices = () => {
   const numbersOfOddVertices = findOddVerticies();
+  var pairingsOfOddVertices = [];
 
   for (let i = 0; i < numbersOfOddVertices.length; i++) {
     for (let j = i + 1; j < numbersOfOddVertices.length; j++) {
@@ -77,21 +76,32 @@ var setPairingsOfVertices = () => {
     }
   }
 
-  console.log(pairingsOfOddVertices);
   return pairingsOfOddVertices;
 };
+
+var initDijkstra = (pairings) => {
+  var sumPaths = 0;
+  _.each(pairings, (pair) => {
+    sumPaths += dijkstra(pair.v1, pair.v2, distMatrix);
+  });
+
+  return sumPaths;
+}
 
 var initChinesePostmanProblem = () => {
 
   if (checkGraphIsConsistent()) {
     console.log('Graph is consistent!');
-    if (setPairingsOfVertices().length !== 0) {
+    var pairings = setPairingsOfVertices();
+    if (pairings.length !== 0) {
       console.log('Graph have odd verticies! Half-Euler Graph');
+      var sumPathEachPairings = initDijkstra(pairings);
+      console.log(sumPathEachPairings);
     } else {
-      console.log('Grpah havent odd verticies! Euler Graph');
+      console.log('Graph haven`t odd verticies! Euler Graph');
     }
   } else {
-    console.log('Graph isnt consistent!');
+    console.log('Graph isn`t consistent!');
   }
 }
 
