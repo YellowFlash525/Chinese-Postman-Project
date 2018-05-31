@@ -1,4 +1,5 @@
 const _ = require('lodash');
+
 var graph =
   [{idNode: 0, edges: [{idEdge: 'a', transitionValue: 8}, {idEdge: 'b', transitionValue: 9}, {idEdge: 'c', transitionValue: 16}]},
   {idNode: 1, edges: [{idEdge: 'a', transitionValue: 8}, {idEdge: 'd', transitionValue: 10}, {idEdge: 'e', transitionValue: 15}]},
@@ -9,7 +10,7 @@ var graph =
 
 var countNumberOfTransitions = () => {
   _.each(graph, (node) => {
-      node.numberOfTransitions = node.edges.length;
+    node.numberOfTransitions = node.edges.length;
   })
 };
 
@@ -17,8 +18,8 @@ var findOddVerticies = () => {
   var oddVertices = [];
   
   _.each(graph, (node) => {
-      if (node.edges.length % 2 !== 0) oddVertices.push(node.idNode);
-  })
+    if (node.edges.length % 2 !== 0) oddVertices.push(node.idNode);
+  });
 
   return oddVertices;
 };
@@ -49,9 +50,7 @@ var checkGraphIsConsistent = () => {
           _.each(node.edges, (edge) => {
             _.each(node1.edges, (edge1) => {
               if (edge.idEdge === edge1.idEdge) {
-                if (visitedNodes[id] === undefined) {
-                  stack.push(node1.idNode)
-                }
+                if (visitedNodes[id] === undefined) stack.push(node1.idNode);
                 visitedNodes[id] = true;
               }
             });
@@ -66,11 +65,11 @@ var checkGraphIsConsistent = () => {
 
 var getNeighbourOfVertex = (vertex) => {
   var neighbours = [];
-  for (let i = 0 ;i < graph.length; i++) {
+  for (let i = 0 ; i < graph.length; i++) {
     if (vertex === graph[i].idNode){
       for (let j = 0; j < graph.length; j++){
-        for (let z = 0; z < graph[i].edges.length; z++){
-          for (let x = 0; x < graph[j].edges.length; x++){
+        for (let z = 0; z < graph[i].edges.length; z++) {
+          for (let x = 0; x < graph[j].edges.length; x++) {
             if (graph[i].edges[z].idEdge === graph[j].edges[x].idEdge) neighbours.push(graph[j].idNode)
           }
         }
@@ -90,8 +89,8 @@ var getTransitionBetweenTwoNodes = (node1,node2, status) => {
   let trans2 = [];
 
   _.each(graph, (node) => {
-      if (node.idNode === node1) trans1 = node.edges; 
-      if (node.idNode === node2) trans2 = node.edges;
+    if (node.idNode === node1) trans1 = node.edges;
+    if (node.idNode === node2) trans2 = node.edges;
   });
 
   if (trans1.length >= trans2.length) {
@@ -117,82 +116,77 @@ var getTransitionBetweenTwoNodes = (node1,node2, status) => {
 }
 
 var initDijkstra = (vertexStart, vertexEnd, showLinks) => {
-    var nodesWithDijkstraValue = [], nodesWithoutDijkstraValue = [], cost = [], predecessors = [];
-    nodesWithoutDijkstraValue = getAllNodes();
+  var nodesWithDijkstraValue = [], nodesWithoutDijkstraValue = [], cost = [], predecessors = [];
+  nodesWithoutDijkstraValue = getAllNodes();
 
-    for (var i = 0; i < graph.length; i++){
-        cost[i] = Infinity;
-        predecessors[i] = -1;
-    }
-    cost[vertexStart] = 0;
+  for (var i = 0; i < graph.length; i++){
+      cost[i] = Infinity;
+      predecessors[i] = -1;
+  }
+  cost[vertexStart] = 0;
 
-    while (nodesWithoutDijkstraValue.length > 0){
-        var min = Infinity;
-        var index = 0;
-        //szukam wierzcholka o najmn wadze ktory jest w Q
-        for (var i = 0; i < nodesWithoutDijkstraValue.length; i++) {
-            if (cost[nodesWithoutDijkstraValue[i]] <= min){
-                min = cost[nodesWithoutDijkstraValue[i]];
-                index = i;
-            }
+  while (nodesWithoutDijkstraValue.length > 0) {
+    var minimumPath = Infinity, index = 0;
+
+    _.each(nodesWithoutDijkstraValue, (value,id) => {
+      if (cost[value] <= minimumPath) {
+        minimumPath = cost[value];
+        index = id;
+      }
+    });
+
+    nodesWithDijkstraValue.push(nodesWithoutDijkstraValue[index])
+    nodesWithoutDijkstraValue.splice(index,1)
+
+    var neigbours = getNeighbourOfVertex(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1])
+    for (let i = 0; i < neigbours.length; i++) {
+      for (let j = 0; j < nodesWithoutDijkstraValue.length; j++) {
+        if (nodesWithoutDijkstraValue[j] == neigbours[i] && cost[nodesWithoutDijkstraValue[j]] > cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[j], false)){
+          cost[nodesWithoutDijkstraValue[j]] = cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[j], false)
+          predecessors[nodesWithoutDijkstraValue[j]] = nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]
         }
-        //przenosze go do Q
-        nodesWithDijkstraValue.push(nodesWithoutDijkstraValue[index])
-        nodesWithoutDijkstraValue.splice(index,1)
-        //dla kazdego sasiada
-        var neigbours = getNeighbourOfVertex(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1])
-        for (var i = 0; i < neigbours.length; i++){
-            for (var j = 0; j < nodesWithoutDijkstraValue.length; j++) {
-                if (nodesWithoutDijkstraValue[j] == neigbours[i]){
-                    if (cost[nodesWithoutDijkstraValue[j]] > cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[j], false)){
-                      cost[nodesWithoutDijkstraValue[j]] = cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[j], false)
-                      predecessors[nodesWithoutDijkstraValue[j]] = nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]
-                    }
-                }
-            }
-        }
-
+      }
     }
-    if (showLinks){
-        var road = [];
-        var temp = vertexEnd;
-        road.push(temp);
-        for (var i = 0; i < predecessors.length; i++){
-            if (predecessors[temp] !== -1){
-                road.push(predecessors[temp]);
-                temp = predecessors[temp];
-            }
-        
-        }
-        return road;
-    }
+  }
 
-    console.log('\nKoszt drogi do: ' + vertexEnd + ' to ' + cost[vertexEnd] + 'z punktu ' + vertexStart);
-    return cost[vertexEnd];
+  if (showLinks) {
+    let path = [], temp = vertexEnd;
+    path.push(temp);
+    for (let i = 0; i < predecessors.length; i++) {
+      if (predecessors[temp] !== -1) {
+          path.push(predecessors[temp]);
+          temp = predecessors[temp];
+      }
+    }
+    return path;
+  }
+
+  console.log('Dijkstra: Path cost from: ' + vertexStart + ' to ' + vertexEnd + ' is: ' + cost[vertexEnd]);
+  return cost[vertexEnd];
 }
 
 var path = [];
 var dfs = (vertex) =>{
   var neighbours = getNeighbourOfVertex(vertex);
-  for (var i = 0; i < neighbours.length; i++) {
-    var getTransitionBetweenTwoNodesTmp = getTransitionBetweenTwoNodes(vertex, neighbours[i], true);
-    for (var j = 0; j < graph[vertex].edges.length; j++){
-      if (JSON.stringify(graph[vertex].edges[j]) === JSON.stringify(getTransitionBetweenTwoNodesTmp)) {
-          graph[vertex].numberOfTransitions--;
-          path.push(graph[vertex].edges[j].idEdge);
-          graph[vertex].edges.splice(j,1);
+  _.each(neighbours, (neighbour) => {
+    var getTransitionBetweenTwoNodesTmp = getTransitionBetweenTwoNodes(vertex, neighbour, true);
+    _.each(graph[vertex].edges, (edge, id) => {
+      if (JSON.stringify(edge) === JSON.stringify(getTransitionBetweenTwoNodesTmp)) {
+        graph[vertex].numberOfTransitions--;
+        path.push(edge.idEdge);
+        graph[vertex].edges.splice(id,1);
       }
-    }
+    });
 
-    for (var j = 0; j < graph[neighbours[i]].edges.length; j++){
-      if (JSON.stringify(graph[neighbours[i]].edges[j]) === JSON.stringify(getTransitionBetweenTwoNodesTmp)) {
-          graph[neighbours[i]].numberOfTransitions--;
-          graph[neighbours[i]].edges.splice(j,1);
+    _.each(graph[neighbour].edges, (edge, id) => {
+      if (JSON.stringify(edge) === JSON.stringify(getTransitionBetweenTwoNodesTmp)) {
+        graph[neighbour].numberOfTransitions--;
+        graph[neighbour].edges.splice(id, 1);
       }
-    }
+    });
 
-    dfs(graph[neighbours[i]].idNode);
-  }
+    dfs(graph[neighbour].idNode);
+  });
 }
 
 var postmanProblem = (vertex) => {
@@ -218,11 +212,9 @@ var postmanProblem = (vertex) => {
       if (takenValues.indexOf(allPossibilities[i].from) === -1) takenValues.push(allPossibilities[i].from);
       if (takenValues.indexOf(allPossibilities[i].to) === -1) takenValues.push(allPossibilities[i].to);
 
-      for (var j = 0; j < allPossibilities.length; j++){
-        if (i !== j) {
-          if (takenValues.indexOf(allPossibilities[j].from) === -1) takenValues.push(allPossibilities[j].from);
-          if (takenValues.indexOf(allPossibilities[j].to) === -1) takenValues.push(allPossibilities[j].to)
-        }
+      for (var j = 0; j < allPossibilities.length; j++) {
+        if (i !== j && takenValues.indexOf(allPossibilities[j].from) === -1) takenValues.push(allPossibilities[j].from);
+        if (i !== j && takenValues.indexOf(allPossibilities[j].to) === -1) takenValues.push(allPossibilities[j].to);
       }
       pairs.push(takenValues);
       takenValues = [];
@@ -234,11 +226,12 @@ var postmanProblem = (vertex) => {
         for (var x = 0; x < allPossibilities.length; x++){
           if ((allPossibilities[x].from === pairs[i][j] && allPossibilities[x].to === pairs[i][j + 1]) ||
             (allPossibilities[x].from === pairs[i][j+1] && allPossibilities[x].to === pairs[i][j])) {
-                sum = sum + allPossibilities[x].transitionValue
+                sum = sum + allPossibilities[x].transitionValue;
             }
         }
       }
-      if ( min > sum){
+
+      if ( min > sum) {
           index = i;
           min = sum;
       }
@@ -268,9 +261,16 @@ var postmanProblem = (vertex) => {
     }
 
     dfs(vertex);
-    console.log("Najkrótsza ścieżka po wszystkich wierzchołkach to: " + path);
+
+    console.log("Shorter path: " + path.join().replace(/,/g, ' -> '));
+    _.each(path, (edge) => {
+      _.each(graph, (node) => {
+        
+      });
+    });
+    console.log('Koszt scieżki: nie wiadomo');
   } else {
-    console.log("Błąd, graf niespójny!");
+    console.log("Graph isn't consistent");
   }
 }
 
