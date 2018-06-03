@@ -75,23 +75,32 @@ var checkGraphIsConsistent = () => {
 
 var getNeighbourOfVertex = (vertex) => {
   var neighbours = [];
-  for (let i = 0 ; i < graph.length; i++) {
+  for (let i = 0; i < graph.length; i++) {
     if (vertex === graph[i].idNode) {
       for (let j = 0; j < graph.length; j++) {
         for (let z = 0; z < graph[i].edges.length; z++) {
           for (let x = 0; x < graph[j].edges.length; x++) {
-            if (graph[i].edges[z].idEdge === graph[j].edges[x].idEdge) neighbours.push(graph[j].idNode)
+            if (graph[i].edges[z].idEdge === graph[j].edges[x].idEdge) neighbours.push(graph[j].idNode);
           }
         }
       }
 
-      for (let i = neighbours.length - 1; i >= 0; i--){
+      for (let i = neighbours.length - 1; i >= 0; i--) {
         if (vertex === neighbours[i]) neighbours.splice(i, 1);
       }
 
       return neighbours;
     }
   }
+}
+
+var getTransitionValue = (transitions1, transitions2, status) => {
+  _.each(transitions1, (trans) => {
+    _.each(transitions2, (trans2) => {
+      if (trans.idEdge === trans2.idEdge && status) return trans;
+      return trans.transitionValue;
+    });
+  });
 }
 
 var getTransitionBetweenTwoNodes = (node1,node2, status) => {
@@ -103,25 +112,7 @@ var getTransitionBetweenTwoNodes = (node1,node2, status) => {
     if (node.idNode === node2) trans2 = node.edges;
   });
 
-  if (trans1.length >= trans2.length) {
-    for (let i = 0; i < trans1.length; i++) {
-      for (let j = 0; j < trans2.length; j++) {
-        if (trans1[i].idEdge === trans2[j].idEdge) {
-          if (status) return trans1[i];
-          return trans1[i].transitionValue;
-        }
-      }
-    }
-  } else {
-    for (let i = 0; i < trans2.length; i++) {
-      for (let j = 0; j < trans1.length; j++) {
-        if (trans2[i].idEdge === trans1[j].idEdge) {
-          if (status) return trans2[i];
-          return trans2[i].transitionValue;
-        }     
-      }
-    }
-  }
+  (trans1.length >= trans2.length) ? getTransitionValue(trans1, trans2, status) : getTransitionValue(trans2, trans1, status);
 }
 
 var initDijkstra = (vertexStart, vertexEnd, road) => {
