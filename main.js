@@ -175,7 +175,15 @@ var initDijkstra = (vertexStart, vertexEnd, road) => {
   return cost[vertexEnd];
 }
 
-var checkAllCennects = (all, pairs, taken) => {
+var countDijkstraForOddVerticies = (oddNodes, all) => {
+  for (let i = 0; i < oddNodes.length - 1; i++) {
+    for (let j = i + 1; j < oddNodes.length; j++) {
+      all.push({from: oddNodes[i], to: oddNodes[j], used: false, transitionValue: initDijkstra(oddNodes[i], oddNodes[j], false)});
+    }
+  }
+}
+
+var checkAllConnects = (all, pairs, taken) => {
   _.each(all, (con, index) => {
     taken = [];
     if (taken.indexOf(all[index].from) === -1) taken.push(all[index].from);
@@ -190,7 +198,24 @@ var checkAllCennects = (all, pairs, taken) => {
   });
 }
 
-var dfs = (vertex) => {
+var checkMinimumValueOfPath = (allConnects, nodePairs, minimum) => {
+  _.each(nodePairs, (pair, id) => {
+    var valueOfTransitions = 0;
+    for (let j = 0; j < pair.length; j+=2) {
+      _.each(allConnects, (connect) => {
+        if ((connect.from === nodePairs[j] && connect.to === nodePairs[j + 1]) || (connect.from === nodePairs[j+1] && connect.to === nodePairs[j])) {
+          valueOfTransitions = valueOfTransitions + connect.transitionValue;
+        }
+      })
+    }
+
+    if (minimum > valueOfTransitions) {
+      minimum = valueOfTransitions;
+    }
+  });
+}
+
+var depthFirstSearch = (vertex) => {
   var neighbours = getNeighbourOfVertex(vertex);
   _.each(neighbours, (neighbour) => {
     var getTransitionBetweenTwoNodesTmp = getTransitionBetweenTwoNodes(vertex, neighbour, true);
@@ -209,7 +234,7 @@ var dfs = (vertex) => {
       }
     });
 
-    dfs(graph[neighbour].idNode);
+    depthFirstSearch(graph[neighbour].idNode);
   });
 }
 
@@ -249,45 +274,22 @@ var postmanProblem = (vertex) => {
 
     oddNodes = findOddVerticies(); 
     newArr = getValueAllEdges();
-    //spróbować przerobić na each
-    for (let i = 0; i < oddNodes.length - 1; i++){
-      for (let j = i + 1; j < oddNodes.length; j++){
-        allConnects.push({
-          from: oddNodes[i],
-          to: oddNodes[j],
-          used: false,
-          transitionValue: initDijkstra(oddNodes[i], oddNodes[j], false)
-        });
-      }
-    }
 
-    checkAllCennects(allConnects, nodePairs, takenValues);
-    //zrobić osobną metode
-    for (let i = 0; i < nodePairs.length; i++) {
-      var sum = 0;
-      for (let j = 0; j < nodePairs[i].length; j+=2) {
-        for (let x = 0; x < allConnects.length; x++) {
-          if ((allConnects[x].from === nodePairs[i][j] && allConnects[x].to === nodePairs[i][j + 1]) ||
-            (allConnects[x].from === nodePairs[i][j+1] && allConnects[x].to === nodePairs[i][j])) {
-              sum = sum + allConnects[x].transitionValue;
-            }
-        }
-      }
+    // counting shorter path between two verticies and adding to allConnects array
+    countDijkstraForOddVerticies(oddNodes, allConnects);
 
-      if (minimum > sum) {
-        index = i;
-        minimum = sum;
-      }
-    }
+    // check all connects and find all asossiated nodes
+    checkAllConnects(allConnects, nodePairs, takenValues);
+    checkMinimumValueOfPath(allConnects, nodePairs);
 
     var arrayWithDijkstra = [];
     for (let j = 0; j < nodePairs[index].length; j+=2) {
-      arrayWithDijkstra.push(initDijkstra(nodePairs[index][j], nodePairs[index][j+1], true))
+      arrayWithDijkstra.push(initDijkstra(nodePairs[index][j], nodePairs[index][j+1], true));
     }
 
     duplicateAssociatedEdges(arrayWithDijkstra);
 
-    dfs(vertex);
+    depthFirstSearch(vertex);
 
     console.log("Shorter path: " + path.join().replace(/,/g, ' -> '));
 
