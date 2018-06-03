@@ -193,21 +193,6 @@ var checkAllConnects = (all, pairs, taken) => {
   });
 }
 
-var checkMinimumValueOfPath = (allConnects, nodePairs, minimum) => {
-  _.each(nodePairs, (pair, id) => {
-    var valueOfTransitions = 0;
-    for (let j = 0; j < pair.length; j+=2) {
-      _.each(allConnects, (connect) => {
-        if ((connect.from === nodePairs[j] && connect.to === nodePairs[j + 1]) || (connect.from === nodePairs[j+1] && connect.to === nodePairs[j])) {
-          valueOfTransitions = valueOfTransitions + connect.transitionValue;
-        }
-      })
-    }
-
-    if (minimum > valueOfTransitions) minimum = valueOfTransitions;
-  });
-}
-
 var depthFirstSearch = (vertex) => {
   var neighbours = getNeighbourOfVertex(vertex);
   _.each(neighbours, (neighbour) => {
@@ -261,7 +246,7 @@ var postmanProblem = (vertex) => {
   if (checkGraphIsConsistent()) {
     console.log('Graph is consistent!');
     var oddNodes = [], allConnects = [], used = [], takenValues = [], nodePairs = [], newArr = [];
-    var minimum = Infinity, index = 0;
+    var index = 0;
 
     oddNodes = findOddVerticies(); 
     newArr = getValueAllEdges();
@@ -269,9 +254,8 @@ var postmanProblem = (vertex) => {
     // counting shorter path between two verticies and adding to allConnects array
     countDijkstraForOddVerticies(oddNodes, allConnects);
 
-    // check all connects and find all asossiated nodes
+    // check all connects and find all associated nodes
     checkAllConnects(allConnects, nodePairs, takenValues);
-    checkMinimumValueOfPath(allConnects, nodePairs);
 
     var arrayWithDijkstra = [];
     for (let j = 0; j < nodePairs[index].length; j+=2) {
