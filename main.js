@@ -245,7 +245,7 @@ var postmanProblem = (vertex) => {
   countNumberOfTransitions();
   if (checkGraphIsConsistent()) {
     console.log('Graph is consistent!');
-    var oddNodes = [], allConnects = [], used = [], takenValues = [], nodePairs = [], newArr = [];
+    var oddNodes = [], allConnects = [], used = [], takenValues = [], nodePairs = [], newArr = [], arrayWithDijkstra = [];
     var index = 0;
 
     oddNodes = findOddVerticies(); 
@@ -257,7 +257,6 @@ var postmanProblem = (vertex) => {
     // check all connects and find all associated nodes
     checkAllConnects(allConnects, nodePairs, takenValues);
 
-    var arrayWithDijkstra = [];
     for (let j = 0; j < nodePairs[index].length; j+=2) {
       arrayWithDijkstra.push(initDijkstra(nodePairs[index][j], nodePairs[index][j+1], true));
     }
