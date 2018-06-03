@@ -1,5 +1,7 @@
 const _ = require('lodash');
 
+var path = [];
+
 var graph =
   [{idNode: 0, edges: [{idEdge: 'a', transitionValue: 8}, {idEdge: 'b', transitionValue: 9}, {idEdge: 'c', transitionValue: 16}]},
   {idNode: 1, edges: [{idEdge: 'a', transitionValue: 8}, {idEdge: 'd', transitionValue: 10}, {idEdge: 'e', transitionValue: 15}]},
@@ -34,6 +36,14 @@ var getAllNodes = () => {
   return all;
 }
 
+var addNewEdge = (array, edge, transitionValue) => {
+  graph[array].numberOfTransitions++;
+  graph[array].edges.push({
+    idEdge: edge,
+    transitionValue: transitionValue
+  });
+}
+
 var checkGraphIsConsistent = () => {
   var stack = [], visitedNodes = [], nodeCurrent, counter = 0;
   stack.push(graph[0].idNode);
@@ -66,8 +76,8 @@ var checkGraphIsConsistent = () => {
 var getNeighbourOfVertex = (vertex) => {
   var neighbours = [];
   for (let i = 0 ; i < graph.length; i++) {
-    if (vertex === graph[i].idNode){
-      for (let j = 0; j < graph.length; j++){
+    if (vertex === graph[i].idNode) {
+      for (let j = 0; j < graph.length; j++) {
         for (let z = 0; z < graph[i].edges.length; z++) {
           for (let x = 0; x < graph[j].edges.length; x++) {
             if (graph[i].edges[z].idEdge === graph[j].edges[x].idEdge) neighbours.push(graph[j].idNode)
@@ -76,7 +86,7 @@ var getNeighbourOfVertex = (vertex) => {
       }
 
       for (let i = neighbours.length - 1; i >= 0; i--){
-          if (vertex === neighbours[i]) neighbours.splice(i, 1);
+        if (vertex === neighbours[i]) neighbours.splice(i, 1);
       }
 
       return neighbours;
@@ -103,29 +113,29 @@ var getTransitionBetweenTwoNodes = (node1,node2, status) => {
       }
     }
   } else {
-      for (let i = 0; i < trans2.length; i++) {
-        for (let j = 0; j < trans1.length; j++) {
-
-          if (trans2[i].idEdge === trans1[j].idEdge) {
-            if (status) return trans2[i];
-            return trans2[i].transitionValue;
-          }     
-        }
+    for (let i = 0; i < trans2.length; i++) {
+      for (let j = 0; j < trans1.length; j++) {
+        if (trans2[i].idEdge === trans1[j].idEdge) {
+          if (status) return trans2[i];
+          return trans2[i].transitionValue;
+        }     
       }
+    }
   }
 }
 
-var initDijkstra = (vertexStart, vertexEnd, showLinks) => {
+var initDijkstra = (vertexStart, vertexEnd, road) => {
   var nodesWithDijkstraValue = [], nodesWithoutDijkstraValue = [], cost = [], predecessors = [];
   nodesWithoutDijkstraValue = getAllNodes();
 
-  for (var i = 0; i < graph.length; i++){
-      cost[i] = Infinity;
-      predecessors[i] = -1;
-  }
+  _.each(graph, (node, index) => {
+    cost[index] = Infinity;
+    predecessors[index] = -1;
+  });
+
   cost[vertexStart] = 0;
 
-  while (nodesWithoutDijkstraValue.length > 0) {
+  while (_.size(nodesWithoutDijkstraValue) > 0) {
     var minimumPath = Infinity, index = 0;
 
     _.each(nodesWithoutDijkstraValue, (value,id) => {
@@ -149,15 +159,15 @@ var initDijkstra = (vertexStart, vertexEnd, showLinks) => {
     }
   }
 
-  if (showLinks) {
-    let path = [], temp = vertexEnd;
-    path.push(temp);
-    for (let i = 0; i < predecessors.length; i++) {
-      if (predecessors[temp] !== -1) {
-          path.push(predecessors[temp]);
-          temp = predecessors[temp];
+  if (road) {
+    let path = [], index = vertexEnd;
+    path.push(index);
+    _.each(predecessors, (predecessor) => {
+      if (predecessors[index] !== -1) {
+        path.push(predecessors[index]);
+        index = predecessors[index];
       }
-    }
+    });
     return path;
   }
 
@@ -165,23 +175,37 @@ var initDijkstra = (vertexStart, vertexEnd, showLinks) => {
   return cost[vertexEnd];
 }
 
-var path = [];
-var dfs = (vertex) =>{
+var checkAllCennects = (all, pairs, taken) => {
+  _.each(all, (con, index) => {
+    taken = [];
+    if (taken.indexOf(all[index].from) === -1) taken.push(all[index].from);
+    if (taken.indexOf(all[index].to) === -1) taken.push(all[index].to);
+
+    for (let index2 = 0; index2 < all.length; index2++) {
+      if (index !== index2 && taken.indexOf(all[index2].from) === -1) taken.push(all[index2].from);
+      if (index !== index2 && taken.indexOf(all[index2].to) === -1) taken.push(all[index2].to);
+    }
+
+    pairs.push(taken);
+  });
+}
+
+var dfs = (vertex) => {
   var neighbours = getNeighbourOfVertex(vertex);
   _.each(neighbours, (neighbour) => {
     var getTransitionBetweenTwoNodesTmp = getTransitionBetweenTwoNodes(vertex, neighbour, true);
-    _.each(graph[vertex].edges, (edge, id) => {
+    _.each(graph[vertex].edges, (edge, index) => {
       if (JSON.stringify(edge) === JSON.stringify(getTransitionBetweenTwoNodesTmp)) {
         graph[vertex].numberOfTransitions--;
         path.push(edge.idEdge);
-        graph[vertex].edges.splice(id, 1);
+        graph[vertex].edges.splice(index, 1);
       }
     });
 
-    _.each(graph[neighbour].edges, (edge, id) => {
+    _.each(graph[neighbour].edges, (edge, index) => {
       if (JSON.stringify(edge) === JSON.stringify(getTransitionBetweenTwoNodesTmp)) {
         graph[neighbour].numberOfTransitions--;
-        graph[neighbour].edges.splice(id, 1);
+        graph[neighbour].edges.splice(index, 1);
       }
     });
 
@@ -189,40 +213,55 @@ var dfs = (vertex) =>{
   });
 }
 
+var getValueAllEdges = () => {
+  var newArr = [];
+  _.each(graph, (node) => {
+    _.each(node.edges, (edge) => {
+      if (!newArr.includes(edge.idEdge)) {
+        newArr.push(edge);
+      }
+    });
+  });
+
+  return newArr;
+}
+
+var duplicateAssociatedEdges = (array) => {
+  for (let i = 0; i < array.length; i++) {
+    for (let j = 0; j < array[i].length-1; j++) {
+      var edge = getTransitionBetweenTwoNodes(array[i][j], array[i][j+1], true).idEdge;
+      var transitionValue = getTransitionBetweenTwoNodes(array[i][j], array[i][j+1], true).transitionValue;
+
+      edge = edge + '2'; // name for new edge
+      addNewEdge(array[i][j], edge, transitionValue);
+      addNewEdge(array[i][j+1], edge, transitionValue);      
+    }
+  }
+}
+
 var postmanProblem = (vertex) => {
   // set number of transitions in object
   countNumberOfTransitions();
   if (checkGraphIsConsistent()) {
     console.log('Graph is consistent!');
-    var oddArray = [], allConnects = [], used = [], takenValues = [], nodePairs = [];
+    var oddNodes = [], allConnects = [], used = [], takenValues = [], nodePairs = [], newArr = [];
     var minimum = Infinity, index = 0;
 
-    oddArray = findOddVerticies();
+    oddNodes = findOddVerticies(); 
+    newArr = getValueAllEdges();
     //spróbować przerobić na each
-    for (let i = 0; i < oddArray.length - 1; i++){
-      for (let j = i + 1; j < oddArray.length; j++){
+    for (let i = 0; i < oddNodes.length - 1; i++){
+      for (let j = i + 1; j < oddNodes.length; j++){
         allConnects.push({
-            from: oddArray[i],
-            to: oddArray[j],
-            used: false,
-            transitionValue: initDijkstra(oddArray[i], oddArray[j], false)
-        })
+          from: oddNodes[i],
+          to: oddNodes[j],
+          used: false,
+          transitionValue: initDijkstra(oddNodes[i], oddNodes[j], false)
+        });
       }
     }
 
-    // zmienić na osobną metoda
-    for (let i = 0; i < allConnects.length; i++) {
-      if (takenValues.indexOf(allConnects[i].from) === -1) takenValues.push(allConnects[i].from);
-      if (takenValues.indexOf(allConnects[i].to) === -1) takenValues.push(allConnects[i].to);
-
-      for (let j = 0; j < allConnects.length; j++) {
-        if (i !== j && takenValues.indexOf(allConnects[j].from) === -1) takenValues.push(allConnects[j].from);
-        if (i !== j && takenValues.indexOf(allConnects[j].to) === -1) takenValues.push(allConnects[j].to);
-      }
-
-      nodePairs.push(takenValues);
-      takenValues = [];
-    }
+    checkAllCennects(allConnects, nodePairs, takenValues);
     //zrobić osobną metode
     for (let i = 0; i < nodePairs.length; i++) {
       var sum = 0;
@@ -244,41 +283,21 @@ var postmanProblem = (vertex) => {
     var arrayWithDijkstra = [];
     for (let j = 0; j < nodePairs[index].length; j+=2) {
       arrayWithDijkstra.push(initDijkstra(nodePairs[index][j], nodePairs[index][j+1], true))
-    } 
-
-    // zrobi osobną metode
-    for (let i = 0; i < arrayWithDijkstra.length; i++) {
-      for (let j = 0; j < arrayWithDijkstra[i].length-1; j++) {
-        var name = getTransitionBetweenTwoNodes(arrayWithDijkstra[i][j], arrayWithDijkstra[i][j+1], true).idEdge;
-        var transitionValue = getTransitionBetweenTwoNodes(arrayWithDijkstra[i][j], arrayWithDijkstra[i][j+1], true).transitionValue;
-
-        name = name + name;
-        graph[arrayWithDijkstra[i][j]].numberOfTransitions++;
-        graph[arrayWithDijkstra[i][j]].edges.push({
-            idEdge: name,
-            transitionValue: transitionValue
-        })
-        graph[arrayWithDijkstra[i][j+1]].numberOfTransitions++;
-        graph[arrayWithDijkstra[i][j+1]].edges.push({
-            idEdge: name,
-            transitionValue: transitionValue
-        })       
-      }
     }
+
+    duplicateAssociatedEdges(arrayWithDijkstra);
 
     dfs(vertex);
 
     console.log("Shorter path: " + path.join().replace(/,/g, ' -> '));
 
     var allCostOfPath = 0;
+
     _.each(path, (edge) => {
-      _.each(graph, (node) => {
-        _.each(node.edges, (edges) => {
-          
-        });
-      });
+      allCostOfPath += newArr.find(x => x.idEdge === edge[0]).transitionValue;
     });
-    console.log('Koszt scieżki: ' + allCostOfPath);
+    
+    console.log('Path cost: ' + allCostOfPath);
   } else {
     console.log("Graph isn't consistent");
   }
