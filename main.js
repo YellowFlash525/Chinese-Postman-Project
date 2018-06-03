@@ -36,6 +36,13 @@ var getAllNodes = () => {
   return all;
 }
 
+var setCostAndPredecessors = (cost, predecessors) => {
+  _.each(graph, (node, index) => {
+    cost[index] = Infinity;
+    predecessors[index] = -1;
+  });
+}
+
 var addNewEdge = (array, edge, transitionValue) => {
   graph[array].numberOfTransitions++;
   graph[array].edges.push({
@@ -119,10 +126,7 @@ var initDijkstra = (vertexStart, vertexEnd, road) => {
   var nodesWithDijkstraValue = [], nodesWithoutDijkstraValue = [], cost = [], predecessors = [];
   nodesWithoutDijkstraValue = getAllNodes();
 
-  _.each(graph, (node, index) => {
-    cost[index] = Infinity;
-    predecessors[index] = -1;
-  });
+  setCostAndPredecessors(cost, predecessors);
 
   cost[vertexStart] = 0;
 
@@ -136,8 +140,8 @@ var initDijkstra = (vertexStart, vertexEnd, road) => {
       }
     });
 
-    nodesWithDijkstraValue.push(nodesWithoutDijkstraValue[index])
-    nodesWithoutDijkstraValue.splice(index,1)
+    nodesWithDijkstraValue.push(nodesWithoutDijkstraValue[index]);
+    nodesWithoutDijkstraValue.splice(index,1);
 
     var neigbours = getNeighbourOfVertex(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1])
     for (let i = 0; i < neigbours.length; i++) {
@@ -200,9 +204,7 @@ var checkMinimumValueOfPath = (allConnects, nodePairs, minimum) => {
       })
     }
 
-    if (minimum > valueOfTransitions) {
-      minimum = valueOfTransitions;
-    }
+    if (minimum > valueOfTransitions) minimum = valueOfTransitions;
   });
 }
 
@@ -233,9 +235,7 @@ var getValueAllEdges = () => {
   var newArr = [];
   _.each(graph, (node) => {
     _.each(node.edges, (edge) => {
-      if (!newArr.includes(edge.idEdge)) {
-        newArr.push(edge);
-      }
+      if (!newArr.includes(edge.idEdge)) newArr.push(edge);
     });
   });
 
