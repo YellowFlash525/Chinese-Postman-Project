@@ -119,7 +119,25 @@ var getTransitionBetweenTwoNodes = (node1,node2, status) => {
     if (node.idNode === node2) trans2 = node.edges;
   });
 
-  (trans1.length >= trans2.length) ? getTransitionValue(trans1, trans2, status) : getTransitionValue(trans2, trans1, status);
+  if (trans1.length >= trans2.length) {
+    for (let i = 0; i < trans1.length; i++) {
+      for (let j = 0; j < trans2.length; j++) {
+        if (trans1[i].idEdge === trans2[j].idEdge) {
+          if (status) return trans1[i];
+          return trans1[i].transitionValue;
+        }
+      }
+    }
+  } else {
+    for (let i = 0; i < trans2.length; i++) {
+      for (let j = 0; j < trans1.length; j++) {
+        if (trans2[i].idEdge === trans1[j].idEdge) {
+          if (status) return trans2[i];
+          return trans2[i].transitionValue;
+        }     
+      }
+    }
+  }
 }
 
 var initDijkstra = (vertexStart, vertexEnd, road) => {
@@ -143,15 +161,15 @@ var initDijkstra = (vertexStart, vertexEnd, road) => {
     nodesWithDijkstraValue.push(nodesWithoutDijkstraValue[index]);
     nodesWithoutDijkstraValue.splice(index,1);
 
-    var neigbours = getNeighbourOfVertex(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]);
-    _.each(neighbours, (neighbour) => {
-      _.each(nodesWithoutDijkstraValue, (node, index) =>{
-        if (nodesWithoutDijkstraValue[index] == neighbour && cost[nodesWithoutDijkstraValue[index]] > cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[index], false)) {
-          cost[nodesWithoutDijkstraValue[index]] = cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[index], false)
-          predecessors[nodesWithoutDijkstraValue[index]] = nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]
+    var neigbours = getNeighbourOfVertex(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1])
+    for (let i = 0; i < neigbours.length; i++) {
+      for (let j = 0; j < nodesWithoutDijkstraValue.length; j++) {
+        if (nodesWithoutDijkstraValue[j] == neigbours[i] && cost[nodesWithoutDijkstraValue[j]] > cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[j], false)){
+          cost[nodesWithoutDijkstraValue[j]] = cost[nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]] + getTransitionBetweenTwoNodes(nodesWithDijkstraValue[nodesWithDijkstraValue.length-1], nodesWithoutDijkstraValue[j], false)
+          predecessors[nodesWithoutDijkstraValue[j]] = nodesWithDijkstraValue[nodesWithDijkstraValue.length-1]
         }
-      });
-    });
+      }
+    }
   }
 
   if (road) {
